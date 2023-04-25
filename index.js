@@ -17,7 +17,7 @@ console.log("GPT_MODE is " + GPT_MODE)
 console.log("History length is " + process.env.HISTORY_LENGTH)
 console.log("OpenAI API Key:" + process.env.OPENAI_API_KEY)
 
-app.use(express.json({extended: true}))
+app.use(express.json({extended: true, limit: '10mb'}))
 
 app.all('/', (req, res) => {
     console.log("Just got a request!")
