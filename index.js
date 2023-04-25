@@ -5,6 +5,7 @@ const fs = require('fs');
 const { promisify } = require('util')
 const readFile = promisify(fs.readFile)
 const GPT_MODE = process.env.GPT_MODE
+const port = process.env.PORT || 3000
 
 let file_context = "You are a helpful Twitch Chatbot."
 
