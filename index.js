@@ -5,7 +5,6 @@ const fs = require('fs');
 const { promisify } = require('util')
 const readFile = promisify(fs.readFile)
 const GPT_MODE = process.env.GPT_MODE
-const port = process.env.PORT || 3000
 
 let file_context = "You are a helpful Twitch Chatbot."
 
@@ -17,7 +16,7 @@ console.log("GPT_MODE is " + GPT_MODE)
 console.log("History length is " + process.env.HISTORY_LENGTH)
 console.log("OpenAI API Key:" + process.env.OPENAI_API_KEY)
 
-app.use(express.json({extended: true, limit: '10mb'}))
+app.use(express.json({extended: true, limit: '1mb'}))
 
 app.all('/', (req, res) => {
     console.log("Just got a request!")
@@ -73,7 +72,7 @@ app.get('/gpt/:text', async (req, res) => {
       console.log("User Input: " + text)
 
       const response = await openai.createChatCompletion({
-        model: "gpt-3.5",
+        model: "gpt-3.5-turbo",
         messages: messages,
         temperature: 0.5,
         max_tokens: 128,
@@ -99,5 +98,37 @@ app.get('/gpt/:text', async (req, res) => {
       } else {
         res.send("Something went wrong. Try again later!")
       }
+
+    } else {
+      //PROMPT MODE EXECUTION
+      const prompt = file_context + "\n\nQ:" + text + "\nA:";
+      console.log("User Input: " + text)
+
+      const response = await openai.createCompletion({
+        model: "text-davinci-003",
+        prompt: prompt,
+        temperature: 0.5,
+        max_tokens: 128,
+        top_p: 1,
+        frequency_penalty: 0,
+        presence_penalty: 0,
+      });
+      if (response.data.choices) {
+        let agent_response = response.data.choices[0].text
+          console.log ("Agent answer: " + agent_response)
+          //Check for Twitch max. chat message length limit and slice if needed
+          if(agent_response.length > 399){
+            console.log("Agent answer exceeds twitch chat limit. Slicing to first 399 characters.")
+            agent_response = agent_response.substring(0, 399)
+            console.log ("Sliced Agent answer: " + agent_response)
+          }
+
+          res.send(agent_response)
+      } else {
+          res.send("Something went wrong. Try again later!")
+      }
+    }
+    
 })
 app.listen(process.env.PORT || 3000)
+Footer
